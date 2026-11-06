@@ -49,11 +49,11 @@ flowchart LR
 | Component | Role in plain words | Implementation |
 | --- | --- | --- |
 | Defender scan configuration | Defines the optional on-upload malware-scanning service and its result topic. | [View code](infra/events.tf) |
-| Private quarantine boundary | Keep stored documents private; pending/blocked/error files cannot be released by the application. | [View code](lab/domain.py) |
+| Private holding area for unchecked files | Keep documents private and block access while a scan is pending, unsafe or unsuccessful. | [View code](lab/domain.py) |
 | Event Grid and result/poison queues | Separate provider delivery from business requests and preserve failed work. | [View code](infra/events.tf) |
 | Actual provider-result policy | The extracted TypeScript maps the exact clean verdict, malicious result and errors. | [View code](reference/scan-result-policy.ts) |
 | Result journal and version checks | Handle duplicate/conflicting events and prevent old results from unlocking new bytes. | [View code](lab/domain.py) |
-| Disabled worker foundation | Show the separate processor boundary without activating a runtime. | [View code](infra/processor.tf) |
+| Disabled worker foundation | Show the separate scan-result processor without starting it. | [View code](infra/processor.tf) |
 
 ## Proof It Works
 
@@ -154,7 +154,7 @@ Read [strengths, weaknesses and tradeoffs](docs/SCALING.md) for the operating de
 | [Architecture](docs/ARCHITECTURE.md) | Follow the actual service and trust boundaries |
 | [Walkthrough](docs/WALKTHROUGH.md) | Understand the steps and run the commands |
 | [Command reference](docs/COMMANDS.md) | Copy commands and check expected results |
-| [Validation evidence](docs/VALIDATION.md) | Separate recorded evidence from untested integration |
+| [Validation evidence](docs/VALIDATION.md) | Separate completed checks from work still needing real-service testing |
 | [Operations](docs/OPERATIONS.md) | Troubleshoot failure stages and recover safely |
 | [Source map](docs/SOURCE-MAP.md) | See actual extracted code versus public reference adapters |
 | [Screenshot plan](docs/SCREENSHOT-PLAN.md) | Capture actual nonproduction portal/terminal evidence later |
