@@ -1,0 +1,20 @@
+{
+  "title": "Secure Serverless Document Processing",
+  "domain": "SERVERLESS / EVENT SYSTEMS / AI",
+  "subtitle": "An upload is not a clean file, and an AI result is not an access decision.",
+  "scenario": "Staff and applicants needed to upload sensitive documents, see when file checks completed and retrieve only authorized clean versions. Event delivery could be delayed or duplicated, and optional AI processing needed an explicit trust boundary.",
+  "outcome": "Automate document handling while preventing stale scan results, duplicate events or optional AI output from bypassing access protection.",
+  "flow": [
+    "Accept an authorized upload",
+    "Store immutable version and ownership",
+    "Receive and deduplicate scan result",
+    "Bind clean proof to exact bytes",
+    "Allow protected use and optional AI assistance"
+  ],
+  "notes": [
+    "The local scan events are synthetic; no malware engine or cloud event subscription is run.",
+    "The default demonstration makes zero AI requests. The optional adapter requires explicit opt-in and separate configuration.",
+    "Image cleanup in the source platform and text classification in this public adapter are different capabilities; the demo does not claim to reproduce image quality."
+  ],
+  "boundary": "Sanitized patterns from an operational platform; this screen shows local code with fictional records."
+}
