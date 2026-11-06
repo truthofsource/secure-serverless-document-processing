@@ -1,0 +1,8 @@
+subscription_id = "<your-subscription-id>"
+resource_group_name = "rg-example-document-processing"
+storage_account_name = "<globally-unique-intake-account>"
+enable_malware_scanning = false
+enable_event_delivery = false
+provision_processor_shell = false
+# Application deployment, private caller route, scanner publisher permission,
+# host/data RBAC and SQL processing grants are separate commissioning steps.

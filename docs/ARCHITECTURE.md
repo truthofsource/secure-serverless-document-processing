@@ -41,3 +41,7 @@ The public implementation borrows the source platform's responsibilities and fai
 ## Before a hosted deployment
 
 Review the caller matrix, identity permissions, durable state, concurrency, log redaction and recovery path. Run actual provider integration tests in an isolated environment. Separately review cost, data retention, DNS and rollback. The manual CI validates local contracts only and has no cloud identity or deployment permission.
+
+## Included Terraform
+
+Private intake/deployment containers, result and poison queues, a managed-identity Event Grid topic, optional Defender scan configuration and an optional disabled Functions Flex shell. See [the code map, resource inventory and integration boundaries](../infra/README.md). This public root does not provision every box in the application diagram.

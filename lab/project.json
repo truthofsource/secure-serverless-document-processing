@@ -16,5 +16,5 @@
     "The default demonstration makes zero AI requests. The optional adapter requires explicit opt-in and separate configuration.",
     "Image cleanup in the source platform and text classification in this public adapter are different capabilities; the demo does not claim to reproduce image quality."
   ],
-  "boundary": "Sanitized patterns from an operational platform; this screen shows local code with fictional records."
+  "boundary": "Engineering patterns from an operational platform; this screen shows local code with fictional records."
 }
