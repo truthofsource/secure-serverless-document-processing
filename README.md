@@ -66,13 +66,37 @@ These are dated results for this reference implementation, not live Azure/AWS de
 
 The tests reject pending files and attempts by another employee. A clean state alone cannot bypass ownership.
 
+Run from the repository root:
+
+```bash
+python -B -m unittest discover -s tests -p test_domain.py -v
+```
+
+**What to look for:** The suite includes pending-file and wrong-owner denials, exact-byte checks and mocked AI behavior.
+
 ### 2. A replacement cannot reuse an old clean result
 
 The current upload becomes pending again. An event for the previous version is recorded as obsolete and cannot unlock it.
 
+Run from the repository root:
+
+```bash
+python -B -m unittest discover -s tests -p test_domain.py -k stale_event -v
+```
+
+**What to look for:** The delayed result for an older file version cannot unlock the replacement.
+
 ### 3. Repeated events are handled safely
 
 Concurrent connections replay the same event without duplicate processing. Conflicting reuse of an event ID is rejected; unknown provider results fail closed.
+
+Run from the repository root:
+
+```bash
+python -B -m unittest discover -s tests -p test_concurrency.py -v
+```
+
+**What to look for:** Separate connections replay one event safely, and replacement cannot change the existing owner.
 
 ### 4. Visible results
 
@@ -91,6 +115,8 @@ Expected access denials are successful negative tests. Cloud permissions, networ
 State, saved Terraform plans, private inputs and credentials are excluded through [`.gitignore`](.gitignore). The existing validation workflow is manual-only and has no cloud deployment permission.
 
 ## Run It Locally
+
+The [command reference](docs/COMMANDS.md) includes prerequisites, Windows equivalents, focused checks and evidence notes.
 
 Requires Python 3.12 or newer. The default demonstration uses the Python standard library. Run inside a virtual environment:
 
@@ -141,6 +167,7 @@ See [strengths, weaknesses and tradeoffs](docs/SCALING.md) for the detailed deci
 
 | Guide | What you will find |
 | --- | --- |
+| [Command reference](docs/COMMANDS.md) | Copy the commands, understand their purpose and check expected results |
 | [Implementation walkthrough](docs/WALKTHROUGH.md) | Follow the processing path and code |
 | [Architecture](docs/ARCHITECTURE.md) | Understand service and identity boundaries |
 | [Terraform](infra/README.md) | Read the resource map, input examples and integration steps |
