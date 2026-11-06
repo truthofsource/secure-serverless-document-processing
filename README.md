@@ -1,192 +1,169 @@
-# Secure Serverless Document Processing
+# Azure Malware Scanning & File Quarantine
 
-**An upload is not a clean file, and an AI result is not an access decision.**
+**Keep uploaded files unavailable until the exact version passes its malware check.**
 
-[The problem](#the-business-problem) · [The solution](#the-solution) · [What was built](#what-was-built) · [Proof it works](#proof-it-works) · [Run it](#run-it-locally)
+[The problem](#the-business-problem) · [The solution](#the-solution) · [What was built](#what-was-built) · [Proof it works](#proof-it-works) · [Commands](docs/COMMANDS.md)
 
-![Overview of the working demonstration](docs/images/01-overview.png)
+![Working local demonstration](docs/images/01-overview.png)
 
 ## The Business Problem
 
-Staff and applicants needed to upload sensitive documents, see when file checks completed and retrieve only authorized clean versions. Event delivery could be delayed or duplicated, and optional AI processing needed an explicit trust boundary.
+Applicants and employees upload documents into an operational platform. Those files must not become downloadable just because storage accepted them. A malware verdict can arrive late, arrive twice, or refer to bytes that have since been replaced.
 
-1. **Upload success mistaken for availability.** A file can be accepted while its malware check is still pending or failed.
-2. **Old results applied to new bytes.** A delayed clean verdict must not unlock a replacement file.
-3. **Duplicate events or wrong-person access.** Event delivery can repeat, and a clean file still belongs to its authorized record.
+1. **Unverified files get distributed.** Upload acceptance is not proof that scanning completed.
+2. **A stale clean result unlocks a replacement.** A verdict must belong to the exact stored version.
+3. **Processing failures look like clean files.** Unknown, failed and malicious results must remain unavailable.
 
 ## The Solution
 
-Record ownership and immutable file identity at upload, process scan results through a separate event path, and allow protected use only when the clean proof matches the current file. Keep optional AI assistance outside the access and malware decisions.
+Use Microsoft Defender for Storage for malware detection, then deliver its results through Event Grid and a queue to a dedicated processor. The application stores a version-bound result and only serves an authorized file when its current bytes have a matching clean proof.
 
-**Business goal:** Automate document handling while preventing stale scan results, duplicate events or optional AI output from bypassing access protection.
+**Business goal:** Reduce the risk of distributing malicious or unverified uploads while giving staff clear file-check status and a recoverable processing path.
 
-### Platform implementation
+### Actual implementation
 
-- Centralized document handling through Azure Functions, private storage and authorized staff/applicant access paths, including legacy-source ingestion patterns using Logic Apps.
-- Built a dedicated scan-result processor, separate from ordinary business requests, with event/container routing, clean-file proofs and protected downloads.
-- Added visible file-check states across upload areas so upload acceptance and clean-file availability were distinct outcomes.
-- Implemented employee badge portrait preparation with optional AI assistance, fixed-template rendering and protected employee views; kept original identity documents separate from derived artifacts.
+This case study comes from the workforce platform I built and operated. It includes selected implementation source and executable tests, related Terraform and operational lessons. The public examples omit employee records, credentials, cloud IDs and private source documents.
 
-This case study draws on a workforce/operations platform I designed and implemented. Organization details and records are excluded. The public code makes selected patterns reproducible; the screenshots show a working local demonstration with fictional data. [Validation scope](docs/VALIDATION.md) separates that evidence from provider-side acceptance.
+- Integrated Defender for Storage scan results with Event Grid, queues and a dedicated Azure Functions processor.
+- Bound clean-file proofs to the exact uploaded file and authorized employee/record before previews or downloads.
+- Added visible upload/file-check status and documented recovery when the processor is stopped or events fail.
+
+The included local preview is a reproducible example. It does not replace actual nonproduction portal acceptance. [The evidence guide](docs/VALIDATION.md) distinguishes source tests, local output and cloud observations.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  User[Staff or applicant] --> API[Authorized upload API]
-  API --> Blob[(Private immutable file)]
-  Blob --> Scan[Defender malware scan]
-  Scan --> Event[Event Grid result]
-  Event --> Queue[(Result queue / dead letter)]
-  Queue --> Processor[Separate scan processor]
-  Processor --> Proof[(Version-bound clean proof)]
-  Proof --> Download[Protected file view]
-  Download -. optional approved input .-> AI[AI assistance]
+  Upload[Authorized upload] --> Blob[Private blob: pending]
+  Blob --> Defender[Microsoft Defender for Storage]
+  Defender --> Event[Event Grid scan result]
+  Event --> Queue[Result queue]
+  Queue --> Worker[Dedicated result processor]
+  Worker --> State{Verdict plus exact version}
+  State -->|Clean and matching| Proof[Saved clean proof]
+  State -->|Malicious| Blocked[Blocked file]
+  State -->|Error or unknown| Error[Unavailable file]
+  Worker -. processing failure .-> Poison[Poison / failed work]
+  Proof --> Auth[Employee and record authorization]
+  Auth --> View[Protected preview or download]
 ```
 
 ## What Was Built
 
 | Component | Role in plain words | Implementation |
 | --- | --- | --- |
-| Private intake and deployment containers | Define keyless storage, file versioning and protected containers through ARM. | [View code](infra/storage.tf) |
-| Result and poison queues | Separate ordinary scan events from failed processing work. | [View code](infra/events.tf) |
-| Event Grid and optional scan configuration | Use a managed-identity topic and separate default-Off choices for delivery and paid Defender scanning. | [View code](infra/events.tf) |
-| Disabled Functions Flex shell | Show the infrastructure boundary without publishing a worker package or activating it. | [View code](infra/processor.tf) |
-| Version-bound processing journal | Handle duplicates and reject stale/conflicting events in the local reference. | [View code](lab/domain.py) |
-| Provider result mapping | Preserve the operational TypeScript rule: only the exact clean verdict is clean. | [View code](reference/scan-result-policy.ts) |
-| Optional structured AI adapter | Validate a bounded text-classification result; default demo makes no paid calls. | [View code](lab/ai.py) |
+| Defender scan configuration | Defines the optional on-upload malware-scanning service and its result topic. | [View code](infra/events.tf) |
+| Private quarantine boundary | Keep stored documents private; pending/blocked/error files cannot be released by the application. | [View code](lab/domain.py) |
+| Event Grid and result/poison queues | Separate provider delivery from business requests and preserve failed work. | [View code](infra/events.tf) |
+| Actual provider-result policy | The extracted TypeScript maps the exact clean verdict, malicious result and errors. | [View code](reference/scan-result-policy.ts) |
+| Result journal and version checks | Handle duplicate/conflicting events and prevent old results from unlocking new bytes. | [View code](lab/domain.py) |
+| Disabled worker foundation | Show the separate processor boundary without activating a runtime. | [View code](infra/processor.tf) |
 
 ## Proof It Works
 
-**Recorded checks:** 16 unit tests passed · 6 demonstration checks passed · 2 Terraform mock tests passed.
+Run from the repository root. Commands are explained in [the command reference](docs/COMMANDS.md).
 
-These are dated results for this reference implementation, not live Azure/AWS deployment claims. [Test record](docs/validation-results.json) · [Evidence and limitations](docs/VALIDATION.md)
+### 1. The actual scan-result mapping fails closed
 
-### 1. Pending and wrong-person downloads are denied
-
-The tests reject pending files and attempts by another employee. A clean state alone cannot bypass ownership.
-
-Run from the repository root:
+The source excerpt accepts the exact clean result, distinguishes malicious content, and maps errors/unknown values to an error state.
 
 ```bash
-python -B -m unittest discover -s tests -p test_domain.py -v
+npm run test:source
 ```
 
-**What to look for:** The suite includes pending-file and wrong-owner denials, exact-byte checks and mocked AI behavior.
+**What to look for:** Six extracted source-policy tests pass. This exercises the mapping; it does not run Defender Antivirus.
 
-### 2. A replacement cannot reuse an old clean result
+### 2. Pending, malicious and failed files stay unavailable
 
-The current upload becomes pending again. An event for the previous version is recorded as obsolete and cannot unlock it.
-
-Run from the repository root:
+The demonstration now includes all four file states and shows that ownership is checked even for a clean file.
 
 ```bash
-python -B -m unittest discover -s tests -p test_domain.py -k stale_event -v
+python -B -m lab demo
 ```
 
-**What to look for:** The delayed result for an older file version cannot unlock the replacement.
+**What to look for:** Eight checks pass. Records show a clean version, a pending replacement, a blocked malicious-verdict fixture and an error-verdict fixture.
 
-### 3. Repeated events are handled safely
+### 3. Old or duplicate events cannot bypass protection
 
-Concurrent connections replay the same event without duplicate processing. Conflicting reuse of an event ID is rejected; unknown provider results fail closed.
-
-Run from the repository root:
+The local journal binds results to immutable versions and handles repeated events across separate connections.
 
 ```bash
-python -B -m unittest discover -s tests -p test_concurrency.py -v
+python -B -m unittest discover -s tests -v
 ```
 
-**What to look for:** Separate connections replay one event safely, and replacement cannot change the existing owner.
+**What to look for:** Thirteen local tests cover ownership, exact bytes, stale results, conflicting replay, concurrent duplicate events and blocked-state protection.
 
-### 4. Visible results
+### 4. Visible output
 
-The dashboard runs the same domain code as the CLI. Desktop/mobile rendering, all three tabs, rerunning the demonstration, cross-origin write rejection and unlisted-file rejection were checked. The screenshots are captured from those runs.
+The workbench shows the executed checks and fictional records. Desktop/mobile views, rerun behavior and access restrictions were checked. See [dated validation](docs/VALIDATION.md) for scope and counts.
 
-![Positive and negative checks from the running demonstration](docs/images/02-validation.png)
-
-Expected access denials are successful negative tests. Cloud permissions, network connectivity and provider integrations need their own acceptance evidence.
+![Executed checks](docs/images/02-validation.png)
 
 ## Security Practices
 
-- The local events are fictional and are not malware-engine verdicts. Real Event Grid/queue authentication and storage routing require separate acceptance.
-- The Functions shell remains Disabled. Application deployment, dedicated host-storage design, SQL permissions and exact host/data roles are integration steps.
-- The optional AI adapter is disabled by default, validates a strict output shape and never determines identity, eligibility or file cleanliness.
+- The detection engine is Defender for Storage. The Python program consumes fictional verdicts; it is not an antivirus engine.
+- Quarantine here means private storage plus denied application retrieval. The reference does not automatically move or delete malicious blobs.
+- A clean verdict does not grant access to another employee, and editable blob tags alone are not an authorization authority.
+- The optional paid scan service, event delivery and worker shell are separate default-Off infrastructure choices.
 
-State, saved Terraform plans, private inputs and credentials are excluded through [`.gitignore`](.gitignore). The existing validation workflow is manual-only and has no cloud deployment permission.
+The [security guide](SECURITY.md) explains trust boundaries. State, plans, credentials and local output stay out of Git.
 
 ## Run It Locally
 
-The [command reference](docs/COMMANDS.md) includes prerequisites, Windows equivalents, focused checks and evidence notes.
-
-Requires Python 3.12 or newer. The default demonstration uses the Python standard library. Run inside a virtual environment:
+Requires Python 3.12 and Node.js 22.18 or newer for the extracted TypeScript tests. The accepted source run used Node 22.23.2. No Node package installation is needed for the source tests.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+npm run test:source
 python -B -m unittest discover -s tests -v
 python -B -m lab demo
 python -B -m lab serve --port 8011
 ```
 
-On Windows, use `.venv\Scripts\Activate.ps1` instead of the `source` command, or run `.venv\Scripts\python.exe` directly. Open [the local workbench](http://127.0.0.1:8011), choose **Run demonstration**, then review **Validation** and **Evidence**. Stop with Ctrl+C. No cloud login, employee data or paid API request is required.
+Windows: use `.venv\Scripts\python.exe` for the Python commands and `npm.cmd` if PowerShell blocks `npm.ps1`. Open [the loopback workbench](http://127.0.0.1:8011). Stop it with Ctrl+C. The [walkthrough](docs/WALKTHROUGH.md) connects these commands to each processing step.
 
 ## Terraform Infrastructure
 
-Private intake/deployment containers, result and poison queues, a managed-identity Event Grid topic, optional Defender scan configuration and an optional disabled Functions Flex shell.
-
-See the [Terraform code and validation steps](infra/README.md), [input example](infra/example.tfvars.example) and [mock plan tests](infra/tests). Cloud commissioning and any paid resources remain separate from the local demonstration.
-
-Validate the infrastructure source without creating cloud resources:
+Private storage and containers, result/poison queues, Event Grid identity and optional Defender on-upload scanning. The optional Functions Flex shell is Disabled. Host-storage separation, exact RBAC, SQL adapters and private caller routes remain explicit commissioning dependencies.
 
 ```bash
-cd infra
-terraform init -backend=false
-terraform fmt -check -recursive
-terraform validate
-terraform test
+terraform -chdir=infra init -backend=false -input=false
+terraform -chdir=infra fmt -check -recursive
+terraform -chdir=infra validate
+terraform -chdir=infra test
 ```
 
-The tests use mock providers. Example inputs are placeholders, not deployment-ready values. Review the [integration boundaries and cost notes](infra/README.md) before any separate cloud commissioning.
+These are local schema/mock-plan checks, not a cloud apply. Read [the infrastructure guide](infra/README.md) and [example inputs](infra/example.tfvars.example) before any separate commissioning.
 
 ## Scaling and Tradeoffs
 
-Bound worker concurrency, monitor oldest pending work and isolate poison messages. Use durable per-file transitions, exact version binding and explicit replay procedures. Keep paid AI limits and unused-artifact retention separate from source-document retention.
+Measure oldest pending upload, result delivery lag, poison-queue growth and replay conflicts. Increase processor concurrency only after testing per-file state transitions and database contention. Keep the scan service and result processor independently observable.
 
-See [strengths, weaknesses and tradeoffs](docs/SCALING.md) for the detailed decisions.
+Read [strengths, weaknesses and tradeoffs](docs/SCALING.md) for the operating decisions.
 
 ## Skills Demonstrated
 
-- Azure Functions, Event Grid and storage queues
-- Asynchronous processing and event deduplication
-- Protected uploads and version-bound scan proofs
-- Managed identities and trust boundaries
-- Optional AI integration and failure handling
+- Microsoft Defender for Storage
+- Azure Functions, Event Grid and queues
+- Malware-result handling and file quarantine
+- Version binding, idempotency and protected downloads
+- Terraform, failure recovery and operational visibility
 
 ## Project Guides
 
-| Guide | What you will find |
+| Guide | Purpose |
 | --- | --- |
-| [Command reference](docs/COMMANDS.md) | Copy the commands, understand their purpose and check expected results |
-| [Implementation walkthrough](docs/WALKTHROUGH.md) | Follow the processing path and code |
-| [Architecture](docs/ARCHITECTURE.md) | Understand service and identity boundaries |
-| [Terraform](infra/README.md) | Read the resource map, input examples and integration steps |
-| [Validation evidence](docs/VALIDATION.md) | Inspect dated checks and their limits |
-| [Operations and troubleshooting](docs/OPERATIONS.md) | Diagnose failures and recover safely |
-| [Security and privacy](SECURITY.md) | Review access, secrets and publication controls |
-| [Scaling and tradeoffs](docs/SCALING.md) | Understand the costs of each design choice |
-| [References](docs/REFERENCES.md) | See technical sources and presentation inspiration |
-
-## Repository Map
-
-```text
-infra/               Terraform source, example inputs and mock plan tests
-lab/                 Working reference implementation and loopback dashboard
-tests/               Positive, negative and recovery cases
-docs/                Architecture, walkthrough, evidence and operating guide
-.github/workflows/   Manual-only contract validation; no cloud deployment
-```
+| [Architecture](docs/ARCHITECTURE.md) | Follow the actual service and trust boundaries |
+| [Walkthrough](docs/WALKTHROUGH.md) | Understand the steps and run the commands |
+| [Command reference](docs/COMMANDS.md) | Copy commands and check expected results |
+| [Validation evidence](docs/VALIDATION.md) | Separate recorded evidence from untested integration |
+| [Operations](docs/OPERATIONS.md) | Troubleshoot failure stages and recover safely |
+| [Source map](docs/SOURCE-MAP.md) | See actual extracted code versus public reference adapters |
+| [Screenshot plan](docs/SCREENSHOT-PLAN.md) | Capture actual nonproduction portal/terminal evidence later |
+| [References](docs/REFERENCES.md) | Technical sources and presentation credits |
 
 ## Cost and Cleanup
 
-The default local demo creates only temporary local state and makes no paid calls. Cloud examples are separate opt-in source and can create billable resources if an operator applies them. No automated deployment or destruction is configured. Use `git status --short --ignored` before cleanup; remove only your own `.venv` or disposable lab output. Never copy real state files, tokens or employee documents into this repository.
+Local demos and source tests do not start Azure resources or make paid provider requests. Cloud scanning, image editing, storage and any commissioned runtime can incur charges. The manual CI workflow is not dispatched automatically. Stop the local server and inspect `git status --short --ignored` before removing only your own temporary output. Real cloud activation or cleanup is separate.

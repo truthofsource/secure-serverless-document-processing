@@ -1,47 +1,49 @@
-# Architecture and implementation boundaries
+# Azure Malware Scanning & File Quarantine architecture
 
-## Source-platform context
+## Business and implementation context
 
-Staff and applicants needed to upload sensitive documents, see when file checks completed and retrieve only authorized clean versions. Event delivery could be delayed or duplicated, and optional AI processing needed an explicit trust boundary.
+Applicants and employees upload documents into an operational platform. Those files must not become downloadable just because storage accepted them. A malware verdict can arrive late, arrive twice, or refer to bytes that have since been replaced.
 
-- Centralized document handling through Azure Functions, private storage and authorized staff/applicant access paths, including legacy-source ingestion patterns using Logic Apps.
-- Built a dedicated scan-result processor, separate from ordinary business requests, with event/container routing, clean-file proofs and protected downloads.
-- Added visible file-check states across upload areas so upload acceptance and clean-file availability were distinct outcomes.
-- Implemented employee badge portrait preparation with optional AI assistance, fixed-template rendering and protected employee views; kept original identity documents separate from derived artifacts.
+- Integrated Defender for Storage scan results with Event Grid, queues and a dedicated Azure Functions processor.
+- Bound clean-file proofs to the exact uploaded file and authorized employee/record before previews or downloads.
+- Added visible upload/file-check status and documented recovery when the processor is stopped or events fail.
 
 ## Processing path
 
 ```mermaid
-flowchart TD
-  User[Staff or applicant] --> API[Authorized upload API]
-  API --> Blob[(Private immutable file)]
-  Blob --> Scan[Defender malware scan]
-  Scan --> Event[Event Grid result]
-  Event --> Queue[(Result queue / dead letter)]
-  Queue --> Processor[Separate scan processor]
-  Processor --> Proof[(Version-bound clean proof)]
-  Proof --> Download[Protected file view]
-  Download -. optional approved input .-> AI[AI assistance]
+flowchart LR
+  Upload[Authorized upload] --> Blob[Private blob: pending]
+  Blob --> Defender[Microsoft Defender for Storage]
+  Defender --> Event[Event Grid scan result]
+  Event --> Queue[Result queue]
+  Queue --> Worker[Dedicated result processor]
+  Worker --> State{Verdict plus exact version}
+  State -->|Clean and matching| Proof[Saved clean proof]
+  State -->|Malicious| Blocked[Blocked file]
+  State -->|Error or unknown| Error[Unavailable file]
+  Worker -. processing failure .-> Poison[Poison / failed work]
+  Proof --> Auth[Employee and record authorization]
+  Auth --> View[Protected preview or download]
 ```
 
-## Portable reference boundary
+## Implementation layers
 
-This repository keeps the decision logic small enough to inspect and run. SQLite, temporary files and modeled network decisions replace cloud-side resources where stated. No production identifiers or original employee records are included. The browser dashboard is a loopback-only demonstration, not a hosted multi-user application.
+| Layer | What is included |
+| --- | --- |
+| Actual implementation excerpts | TypeScript policy/domain functions and their source tests; no hosted adapter or private record |
+| Public local reference | Python demonstration and a loopback dashboard using fictional inputs |
+| Infrastructure | Terraform resource boundaries, explicit inputs and mock plan tests |
+| Actual cloud evidence | Existing platform context; new nonproduction portal captures are optional follow-up evidence |
 
-The public implementation borrows the source platform's responsibilities and failure lessons. It does not claim byte-for-byte equality with the Node.js/Azure implementation. Changes of language or backing store are explicitly reference adaptations.
+## Trust and identity
 
-## Trust boundaries
+- The detection engine is Defender for Storage. The Python program consumes fictional verdicts; it is not an antivirus engine.
+- Quarantine here means private storage plus denied application retrieval. The reference does not automatically move or delete malicious blobs.
+- A clean verdict does not grant access to another employee, and editable blob tags alone are not an authorization authority.
+- The optional paid scan service, event delivery and worker shell are separate default-Off infrastructure choices.
 
-1. Treat user input, scan events and imported files as untrusted data.
-2. Validate identity, resource ownership and exact source/version before changing state.
-3. Keep privileged workers and deployment identities separate from business API permissions.
-4. Preserve failed and unknown outcomes; do not turn absence of evidence into a success.
-5. Keep secrets in a managed secret store or local environment, never in Git or screenshots.
+## Deployment boundary
 
-## Before a hosted deployment
+Private storage and containers, result/poison queues, Event Grid identity and optional Defender on-upload scanning. The optional Functions Flex shell is Disabled. Host-storage separation, exact RBAC, SQL adapters and private caller routes remain explicit commissioning dependencies.
 
-Review the caller matrix, identity permissions, durable state, concurrency, log redaction and recovery path. Run actual provider integration tests in an isolated environment. Separately review cost, data retention, DNS and rollback. The manual CI validates local contracts only and has no cloud identity or deployment permission.
-
-## Included Terraform
-
-Private intake/deployment containers, result and poison queues, a managed-identity Event Grid topic, optional Defender scan configuration and an optional disabled Functions Flex shell. See [the code map, resource inventory and integration boundaries](../infra/README.md). This public root does not provision every box in the application diagram.
+No resource was applied for this project packaging. A real deployment requires correct identities, network/DNS reachability, permissions, package/schema compatibility and recovery acceptance. The local dashboard is not an internet-facing multi-user application.

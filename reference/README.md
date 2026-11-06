@@ -1,5 +1,9 @@
-# Curated source excerpt
+# Actual malware-result policy
 
-`scan-result-policy.ts` is the source platform's small provider-result mapping with product branding removed. Only the exact clean result is clean; malicious is distinct; unknown/error/not-scanned fail closed. The runnable Python reference adds event replay, ownership and immutable-version checks around the same decision boundary.
+The policy and its six tests are extracted from the implemented scan processor. Imports are portable, and the product-specific type name is neutral. No cloud credentials or employee documents are included.
 
-This excerpt alone is not an authenticated Azure event receiver. The live design also needs Event Grid subscription validation, managed identity, scoped queue access, container allowlisting, file-version binding, event journaling and dead-letter recovery. The default demonstration uses synthetic provider events and does not scan malware.
+```bash
+npm run test:source
+```
+
+Only the exact clean result maps to clean. Malicious remains distinct; not-scanned, errors and future unknown values fail closed. This code interprets a trusted provider result; it does not detect malware or authenticate an event by itself.

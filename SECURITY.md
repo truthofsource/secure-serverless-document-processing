@@ -1,12 +1,12 @@
-# Security and privacy
+# Malware scanner: security and privacy
 
-This is an educational reference derived from operational engineering patterns. Do not use the loopback dashboard as an internet-facing application.
+This public case study uses actual implementation rules plus fictional local inputs. The loopback workbench is not an internet-facing application.
 
-- All displayed people and records are fictional. No tenant, subscription, private endpoint, employee ID or real document is required.
-- The dashboard binds to `127.0.0.1`, checks Host and Origin, uses an explicit asset allowlist and sends a restrictive content security policy.
-- State changes exposed by the dashboard rerun only synthetic local fixtures. There is no cloud mutation endpoint.
-- GitHub Actions has read-only repository permission, no OIDC token permission and a manual trigger. Dependencies/actions are pinned, but still require periodic review.
-- Keep API keys, provider tokens, Terraform state, plans and real operational exports outside Git. Use managed identities and exact federated trust where possible.
-- Local modeled policies and synthetic scan receipts are not security attestations. Hosted adapters need provider-side authentication, least privilege and operational tests.
+- Identity, owner, immutable version and current state are separate checks.
+- The application must resolve trusted records; browser JSON is not a trusted ownership or scan verdict.
+- The dashboard binds to `127.0.0.1`, checks Host/Origin and uses an asset allowlist and restrictive CSP.
+- Cloud credentials, provider keys, original IDs, employee records, Terraform state/plans and private operational exports stay outside Git.
+- Manual CI has repository read permission only and no OIDC/cloud deployment permission.
+- A local source test is not live cloud permission, provider-quality or security certification evidence.
 
-Report a defect through a GitHub issue using fictional reproduction data. Never attach credentials, private employee documents or real authentication traces.
+Report defects with fictional reproduction data. Do not attach real identity documents, employee images, bearer tokens, secret values or live secure links.

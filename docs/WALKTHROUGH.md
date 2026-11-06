@@ -1,38 +1,42 @@
-# Implementation walkthrough
+# Malware scanner walkthrough
 
-Staff and applicants needed to upload sensitive documents, see when file checks completed and retrieve only authorized clean versions. Event delivery could be delayed or duplicated, and optional AI processing needed an explicit trust boundary.
+## 1. Upload into a private, pending state
 
-## 1. Submit a file
+The application authorizes the upload and records its employee/record binding and immutable storage identity. Quarantine in this design means application retrieval is denied while the file is pending. This reference does not move files between containers or automatically delete malicious content.
 
-A protected upload records owner and immutable version. The UI may say uploaded while the scan remains pending; availability requires a later clean proof.
+## 2. Let the detection service produce the verdict
 
-## 2. Process the event
+Microsoft Defender for Storage performs malware detection. Its scan event is delivered through Event Grid and a queue. The separate Functions processor records the result. The detection service and result processor are different components; an upload can stay pending when either the scan or later processing is incomplete.
 
-At-least-once delivery means duplicates are normal. The event journal returns the existing outcome for an identical replay and rejects conflicting reuse of the same event ID.
-
-## 3. Replace the file
-
-A new version becomes pending again. A delayed clean event for the old version must not unlock the replacement. Download also checks the exact content hash and employee binding.
-
-## 4. Keep AI optional
-
-The Responses adapter classifies approved synthetic text into a strict schema. It is disabled by default, makes one bounded call when explicitly invoked and never decides identity, eligibility or file cleanliness.
-
-## Read the implementation
-
-Start with [the domain module](../lab/domain.py), then [its tests](../tests/test_domain.py). The [dashboard report](../lab/demo.py) runs the same implementation; it does not substitute static success labels. `python -B -m lab demo` exits with an error if a demonstration assertion fails.
-
-## Discuss the result
-
-Describe the business problem first, the trust boundary second and the observed result third. Claim only the evidence in the validation record. A portable reference test is useful evidence of code behavior; it is not live-provider acceptance.
-
-## Commands for this walkthrough
-
-Start from the repository root. Run the working document intake and scan-event reference and its tests:
+The extracted policy maps `No threats found` to clean, `Malicious` to malicious, and errors/not-scanned/unknown values to error:
 
 ```bash
-python -B -m unittest discover -s tests -v
+npm run test:source
+```
+
+## 3. Bind the result to the exact file
+
+The hosted system must validate authenticated delivery, storage/container boundary and immutable file metadata. The local adapter models the version-bound state and event journal. An old clean result cannot unlock a replacement file.
+
+```bash
+python -B -m unittest discover -s tests -p test_domain.py -k stale_event -v
+```
+
+## 4. Handle duplicate or failed events
+
+Identical event replays return the stored outcome. Reusing an event ID with different details is rejected. A malicious result cannot be overwritten by a later clean result in the local model. Failed processing requires investigation/recovery, not a manual clean flag.
+
+```bash
+python -B -m unittest discover -s tests -p test_concurrency.py -v
+python -B -m unittest discover -s tests -p test_domain.py -k blocked -v
+```
+
+## 5. Release only an authorized clean version
+
+A clean verdict alone does not grant another employee access. The local download gate checks owner, state and exact content hash. The cloud read path also requires trusted storage/version metadata and service authorization.
+
+```bash
 python -B -m lab demo
 ```
 
-Then follow the commands beside each [proof section](../README.md#proof-it-works). The [full command reference](COMMANDS.md) explains prerequisites, expected outcomes and which additional procedures have not been run.
+Inspect pending, clean, blocked and error records, then open the [workbench](http://127.0.0.1:8011) after starting `python -B -m lab serve`. The events are fictional: no malware engine, real sample or Azure scanner is run locally.

@@ -22,3 +22,5 @@ __pycache__/
 crash.log
 crash.*.log
 .terraform.tfstate.lock.info
+
+node_modules/

@@ -1,40 +1,33 @@
-# Validation evidence and scope
+# Validation evidence
 
-## Executed for this public reference
+## Executed locally
 
-- **16 unit tests passed**, including positive and negative paths.
-- **6 demonstration checks passed** through the actual domain code.
-- Desktop and 390-pixel mobile pages rendered without browser errors or horizontal page overflow.
-- The Run demonstration action, three tabs, cross-origin write rejection and unlisted-asset rejection were exercised.
-- Manual-only GitHub workflow passed actionlint 1.7.12. No hosted Actions run was consumed for this preparation.
-- Trivy 0.75.0 source secret scan: zero findings across the five staged repositories, excluding the Terraform provider cache. This does not prove that arbitrary later additions are secret-free.
+| Check | Recorded result |
+| --- | --- |
+| Actual extracted TypeScript rules | 6 tests passed |
+| Python reference/renderer | 13 tests passed |
+| Executed demonstration | 8 checks passed |
+| Terraform schema and mock plans | Validate passed; 2 mock tests passed; no apply |
+| Browser | Desktop and 390-pixel mobile, tabs/rerun, origin/asset denials passed |
+| Workflow syntax | actionlint 1.7.12 passed; no hosted workflow dispatched |
+| Source secret scan | Trivy 0.75.0: zero findings in this prepared input |
 
-See [the machine-readable record](validation-results.json) for date, commands' result counts and domain-source hashes.
+The six actual source tests establish the provider-result mapping. The Python demo replays fictional verdicts; it does not run a malware engine or prove actual Defender delivery. Its eight checks include clean, pending, malicious-verdict and error-verdict cases.
 
-## Evidence classification
-
-| Evidence | What it establishes | What it does not establish |
-| --- | --- | --- |
-| Source-platform narrative | The reusable architecture and operating decisions behind the project | Public access to private records or a copy of the production environment |
-| Unit and concurrency tests | Behavior of these exact portable reference modules | Provider permission correctness or distributed multi-region behavior |
-| Local screenshots | The running dashboard and real code output with fictional records | A cloud deployment or live Azure/AWS acceptance |
-| Scanner source check | No findings from that tool in that selected input | A whole-estate penetration test or vulnerability-free containers |
-| Cloud examples | Reviewable configuration/design patterns | Commissioned resources, paid API calls or actual IAM grants |
+The [machine record](validation-results.json) includes date, commands, counts and source hashes. Screenshots come from the working local code. They are not hand-edited success states or Azure Portal captures.
 
 ## Reproduce
 
 ```bash
+npm run test:source
 python -B -m unittest discover -s tests -v
 python -B -m lab demo
-python -B -m lab serve --port 8011
 ```
 
-The successful screenshots were generated from these local demonstrations; they are not hand-edited success states. The Windows recovery test initially exposed unclosed SQLite handles; explicit connection closure fixed the cleanup failure. Concurrent identity/scan journal tests verify duplicate requests through separate worker connections where relevant.
+## Evidence boundaries
 
-## Deliberate limits
-
-The public reference does not use real employee records, make paid AI calls, send email/SMS, mutate Microsoft Graph or apply cloud infrastructure. Local filesystem and SQLite tests do not replace provider-specific failure/recovery tests. Real implementation history is described as context and kept separate from reproducible evidence in this repository.
-
-## Terraform addition
-
-Provider initialization, formatting and schema validation passed; **2 mock plan tests passed**. No real plan/apply or cloud change occurred. [Machine record](terraform-validation.json). Application unit/browser results above remain the earlier separate acceptance.
+- Actual implementation source/tests are distinct from a compact public renderer or event adapter.
+- Synthetic inputs preserve privacy; they do not establish real provider output quality, identity or employee findings.
+- Mock plans do not prove deployed IAM, DNS, queue delivery, SQL adapter or application hosting.
+- No Azure service start, actual employee operation, live provider request or paid image call occurred for this preparation.
+- [Nonproduction screenshot capture](SCREENSHOT-PLAN.md) remains optional follow-up. Existing accepted operational history is not relabeled as a fresh cloud test.

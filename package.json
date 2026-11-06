@@ -1,0 +1,8 @@
+{
+  "name": "azure-malware-scan-reference",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:source": "node --experimental-strip-types --test reference/scan-result-policy.test.ts"
+  }
+}

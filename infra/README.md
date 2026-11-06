@@ -1,4 +1,4 @@
-# Terraform infrastructure
+# Malware scanner Terraform
 
 Private intake/deployment containers, result and poison queues, a managed-identity Event Grid topic, optional Defender scan configuration and an optional disabled Functions Flex shell.
 
@@ -40,7 +40,7 @@ Paid Defender scanning, event delivery and shell provisioning are three separate
 
 Storage, Event Grid and any provisioned plan/resources can incur charges. Enabling Defender scanning is a separate paid service decision; its data-volume cap is not an application spending cap. A Disabled worker is not evidence that pending files were scanned.
 
-Mock-test cleanup is entirely local. A real destroy is a separate reviewed action against the correct lab state; never run it against copied production state or shared resources. Payroll deletion protection in the identity example intentionally prevents a casual destroy of that group. Retire grants/trust and inventory retained recovery artifacts before removing a real lab.
+Mock-test cleanup is entirely local. A real destroy is a separate reviewed action against the correct lab state; never run it against copied production state or shared resources. Retire grants/trust and inventory retained recovery artifacts before removing a real lab.
 
 ## Strengths and tradeoffs
 
@@ -66,6 +66,6 @@ The foundation makes the event path reviewable without activating workers or pai
 
 - [Terraform test command and mock providers](https://developer.hashicorp.com/terraform/cli/commands/test)
 - [AzureRM provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
-- [Azure Registry repository permissions](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-rbac-abac-repository-permissions)
+- [Defender scan-result delivery](https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-storage-configure-malware-scan)
 
 See [project architecture](../docs/ARCHITECTURE.md) and [validation evidence](../docs/VALIDATION.md) for the separate application/reference boundaries.

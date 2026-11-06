@@ -1,20 +1,14 @@
-# Scaling, strengths and tradeoffs
+# Malware scanner scaling and tradeoffs
 
-## When the workload grows
+| Choice | Strength | Weakness / tradeoff |
+| --- | --- | --- |
+| Managed Defender scanning | Uses a maintained detection service rather than building an antivirus engine | Paid service limits, supported inputs and scan latency still need monitoring |
+| Asynchronous result queue | Decouples uploads, event delivery and processing | Users need pending status and an operational recovery path |
+| Separate Functions processor | Limits business-API privilege and isolates event work | Another runtime/identity/queue must be operated |
+| Exact-version clean proof | Stops stale verdicts from releasing replacement bytes | Requires durable metadata and atomic per-file state transitions |
+| Logical quarantine | Blocks ordinary application distribution without moving files | Storage operators with separate data permission remain a distinct trust boundary |
+| Fail closed on unknown/error | Avoids treating absence of evidence as a clean result | Can reduce availability until the failure is resolved |
 
-Use bounded worker concurrency, poison-message isolation and dead-letter monitoring. Store file versions and event journals durably, with per-file atomic state transitions. Limit signed URLs, response sizes and paid AI concurrency. Track oldest pending file, result lag, replay conflicts and queue age. Apply retention to unused derived artifacts without deleting source records or active-issued documents. Require separate commissioning for every new source container.
+Scale from measured arrival rate, average scan size, result lag and queue age. Bound processor concurrency and retry budgets. Use a shared durable journal rather than independent SQLite workers, and serialize or conditionally update each immutable file's state. Isolate poison work and deduplicate before side effects.
 
-## Design choices
-
-| Choice | Strength, weakness and tradeoff |
-| --- | --- |
-| Asynchronous malware checks | Keeps upload requests responsive. Users need clear pending/error feedback and recovery procedures for missed events. |
-| Separate processor | Limits business API permissions and isolates event handling. Adds a worker, queue and operational backlog. |
-| Version-bound proof | Prevents stale verdicts from authorizing new bytes. Requires exact storage metadata and careful replacement handling. |
-| Optional generative AI | Can reduce repetitive preparation work. Adds cost, provider failure modes and output-quality review; it cannot recover truly obscured details reliably. |
-
-## Operating measures
-
-Measure throughput, oldest pending work, duplicate/rejected operations, failure stage and recovery duration. Tie alerts to an operator action. Do not infer service availability from an old successful import or infer delivery from provider acceptance.
-
-Start with measured load and an explicit service objective. Increase concurrency only after checking provider quotas, database contention, per-person ordering and recovery behavior. Horizontal scaling requires a shared durable store; independent in-memory or SQLite processes are not a distributed coordination system.
+Test storage, event-delivery and database limits before raising throughput. A configured data-volume cap is not a hard spending cap. Blob versions, retained failed files, operations and diagnostics can continue to cost money even when a processor is paused. Define investigation/retention ownership before automating deletion.

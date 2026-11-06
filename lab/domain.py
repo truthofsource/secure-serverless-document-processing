@@ -155,6 +155,20 @@ def demo():
         "A changed payload cannot reuse a clean proof",
         lambda: intake.download("upload-001", "employee-001", data),
     )
+    malicious = b"Fictional file represented by a malicious verdict"
+    intake.upload("upload-002", "employee-001", "version-001", malicious)
+    intake.scan("event-003", "upload-002", "version-001", "Malicious")
+    denied(
+        "Malicious verdict keeps the file unavailable",
+        lambda: intake.download("upload-002", "employee-001", malicious),
+    )
+    unknown = b"Fictional file with an unknown result"
+    intake.upload("upload-003", "employee-001", "version-001", unknown)
+    intake.scan("event-004", "upload-003", "version-001", "Unknown provider value")
+    denied(
+        "Unknown scan result fails closed",
+        lambda: intake.download("upload-003", "employee-001", unknown),
+    )
     intake.db.close()
     return {
         "checks": checks,
@@ -170,9 +184,9 @@ def demo():
                 "detail": "Pending remains blocked",
             },
             {
-                "label": "Paid AI calls",
-                "value": "0",
-                "detail": "Optional adapter is disabled",
+                "label": "File states",
+                "value": "4",
+                "detail": "Pending, clean, blocked and error",
             },
             {"label": "Cloud writes", "value": "0", "detail": "Local event adapter"},
         ],
@@ -180,5 +194,11 @@ def demo():
             ["upload-001 / v1", "Clean", "Exact content hash and owner verified"],
             ["event-001", "Duplicate", "Original outcome returned"],
             ["upload-001 / v2", "Pending", "Old scan cannot unlock new bytes"],
+            [
+                "upload-002 / v1",
+                "Blocked",
+                "Malicious fixture verdict; retrieval denied",
+            ],
+            ["upload-003 / v1", "Error", "Unknown fixture verdict; retrieval denied"],
         ],
     }

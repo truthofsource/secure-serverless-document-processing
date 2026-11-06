@@ -1,7 +1,5 @@
-import json, os, unittest
-from unittest.mock import patch
+import unittest
 from lab.domain import Intake
-from lab.ai import classify
 
 
 class IntakeTests(unittest.TestCase):
@@ -63,56 +61,3 @@ class IntakeTests(unittest.TestCase):
     def test_immutable_version(self):
         with self.assertRaises(ValueError):
             self.i.upload("file-1", "employee-1", "v1", b"two")
-
-    def test_ai_disabled(self):
-        with self.assertRaises(PermissionError):
-            classify("Synthetic invoice")
-
-    def test_mock_ai_schema(self):
-        def transport(body):
-            self.assertFalse(body["store"])
-            self.assertTrue(body["text"]["format"]["strict"])
-            return {
-                "status": "completed",
-                "output": [
-                    {
-                        "type": "message",
-                        "content": [
-                            {
-                                "type": "output_text",
-                                "text": json.dumps(
-                                    {"category": "invoice", "needs_review": True}
-                                ),
-                            }
-                        ],
-                    }
-                ],
-            }
-
-        with patch.dict(
-            os.environ,
-            {
-                "OPENAI_API_KEY": "synthetic-not-a-credential",
-                "OPENAI_MODEL": "configured-model",
-            },
-        ):
-            self.assertTrue(
-                classify("Synthetic invoice", allow_paid=True, transport=transport)[
-                    "needs_review"
-                ]
-            )
-
-    def test_ai_rejects_incomplete(self):
-        with patch.dict(
-            os.environ,
-            {
-                "OPENAI_API_KEY": "synthetic-not-a-credential",
-                "OPENAI_MODEL": "configured-model",
-            },
-        ):
-            with self.assertRaises(ValueError):
-                classify(
-                    "Synthetic invoice",
-                    allow_paid=True,
-                    transport=lambda _: {"status": "incomplete"},
-                )

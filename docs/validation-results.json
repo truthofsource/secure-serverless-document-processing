@@ -1,12 +1,17 @@
 {
-  "schema": 1,
-  "executed_at_utc": "2026-11-06T10:19:20.095516+00:00",
-  "python": "3.12.10",
-  "unit_tests": {
-    "passed": 16,
-    "failed": 0
+  "schema": 2,
+  "executed_at_utc": "2026-11-06T18:59:58.977482+00:00",
+  "source_tests": {
+    "passed": 6,
+    "failed": 0,
+    "command": "npm run test:source"
   },
-  "demonstration_checks": 6,
+  "python_tests": {
+    "passed": 13,
+    "failed": 0,
+    "command": "python -B -m unittest discover -s tests -v"
+  },
+  "demonstration_checks": 8,
   "browser": {
     "project": "secure-serverless-document-processing",
     "desktop": true,
@@ -17,22 +22,31 @@
     "unknownAssetDenied": true,
     "browserErrors": 0
   },
-  "workflow_lint": "actionlint 1.7.12 passed",
-  "secret_scan": {
-    "tool": "Trivy 0.75.0",
-    "scope": "repository source; provider cache excluded",
-    "findings": 0
+  "terraform": {
+    "validate": "passed",
+    "mock_tests_passed": 2,
+    "applied": false
   },
+  "workflow_lint": "actionlint 1.7.12 passed",
+  "source_secret_scan": "Trivy 0.75.0: zero findings",
+  "paid_requests": 0,
+  "cloud_resources_started": 0,
   "source_hashes": {
     "lab/__init__.py": "95a8296d613b692bb13af925e90204c901108a2c30dfd3ffd4d0fadca55cb5f9",
     "lab/__main__.py": "d528e758b251fa9f3bf42a326d8644a7055bcd1884112579e88981f33dcbba13",
-    "lab/ai.py": "220317d29de02d25695fa9ccb137236d83ee4a918a518b4c13cb30fa463751a7",
     "lab/demo.py": "1ee90686323e9ae6b91bddf1dd303e8c90c5121078f1e27634479fd3381d82bb",
-    "lab/domain.py": "56ca31ecf94d3b28778f047b402ca5c13418f93b0a3b5d8f4ac6f135b28cdbbb",
-    "lab/project.json": "97b504ae5213246e6aa45025d722856f6785855c4f2d65474624a94c8d395185",
-    "lab/web/app.js": "3bdf7e85bd6c5229591cacaac6b5360edf402a3498af9491297a6451000693c3",
-    "lab/web/index.html": "35cc32683f882bd63f96504ac54907ba88c9eecaf3cecb92ef789bcb01f4529a",
-    "lab/web/style.css": "d69c9930ee870f702086a38793f7e4ba9fe42cad77e60eb15dc879a8f6921c3e",
-    "lab/workbench.py": "cc2889350fd182e10a74b1153e2c96ef93d5c295724f0ae281d757d1a2e546b5"
+    "lab/domain.py": "701103c0180cb140272e30c0a123ab8ec4464efd952ee87dd1d63cb1f6eb3144",
+    "lab/project.json": "54ec7dd5534203df69595342faf381f2141e46ec29fb4a8f3acc9e83291b8fcb",
+    "lab/workbench.py": "cc2889350fd182e10a74b1153e2c96ef93d5c295724f0ae281d757d1a2e546b5",
+    "reference/scan-result-policy.test.ts": "54b0905a79704b0cc375f0a0c1ccf54ca185a55ed3a1bfca98acd3af03372c7b",
+    "reference/scan-result-policy.ts": "11122b5a7f7f0b3f281e05d92d1a36911577edbc191edac5fb657778a21771ca",
+    "infra/.terraform.lock.hcl": "9ea8e69f50b59becf0009a719679c48a64c2652dfe29d2533a1d1e18eb9cfc31",
+    "infra/events.tf": "e64a8f92fdc5d6d56c2b515d01d8e8878e67750311195f35f704332bb1ee727e",
+    "infra/main.tf": "813136063e3f77757e01c194c0160c740a34a3c194988c9795298d4f3f6aa274",
+    "infra/processor.tf": "490b553e65a96976ede480b6d070941d7fd90a87b9a18482999e3b5123b4842c",
+    "infra/storage.tf": "3d45443a94a4bc35a57e0b4f5f858cbef1e2d26ad58c5cd4d5c9cfae5600d768",
+    "infra/tests/intake.tftest.hcl": "01eae7f73cb7f1ac95449ecfa449b8a27df61fe374f78f39999b06b4d785c61f",
+    "infra/variables.tf": "e3d35087d3cdea42de01cb963db729e301a4a6656079196a86584d45f8f82f5b",
+    "infra/versions.tf": "8d2f5e302e73fd518523e9ee38aede5f6d15dc9e051451e07fbca104d79ce6f0"
   }
 }
