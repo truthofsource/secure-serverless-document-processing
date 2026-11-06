@@ -1,11 +1,13 @@
 # Azure Malware Scanning & File Quarantine architecture
 
+**Terms used here:** Role-based access control gives people or services permissions according to their roles. DNS turns a service name into the network address used to reach it.
+
 ## Business and implementation context
 
 Applicants and employees upload documents into an operational platform. Those files must not become downloadable just because storage accepted them. A malware verdict can arrive late, arrive twice, or refer to bytes that have since been replaced.
 
 - Integrated Defender for Storage scan results with Event Grid, queues and a dedicated Azure Functions processor.
-- Bound clean-file proofs to the exact uploaded file and authorized employee/record before previews or downloads.
+- Bound saved clean-scan results for the exact files to the exact uploaded file and authorized employee/record before previews or downloads.
 - Added visible upload/file-check status and documented recovery when the processor is stopped or events fail.
 
 ## Processing path

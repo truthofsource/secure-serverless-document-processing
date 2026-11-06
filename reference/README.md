@@ -6,4 +6,4 @@ The policy and its six tests are extracted from the implemented scan processor. 
 npm run test:source
 ```
 
-Only the exact clean result maps to clean. Malicious remains distinct; not-scanned, errors and future unknown values fail closed. This code interprets a trusted provider result; it does not detect malware or authenticate an event by itself.
+Only the exact clean result maps to clean. Malicious remains distinct; not-scanned, errors and future unknown values deny the action when the result is unclear. This code interprets a trusted provider result; it does not detect malware or authenticate an event by itself.

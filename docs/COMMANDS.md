@@ -1,5 +1,7 @@
 # Commands and expected results
 
+**Terms used here:** Role-based access control gives people or services permissions according to their roles. DNS turns a service name into the network address used to reach it.
+
 Run from the repository root. These commands reproduce local source/reference checks; they do not apply Azure resources.
 
 ## Setup

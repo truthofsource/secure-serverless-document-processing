@@ -10,6 +10,6 @@ This is a case study of the malware-scanning controls built for the actual workf
 | `infra/events.tf` | Related Defender/Event Grid/queue resource patterns with neutral names and explicit Off controls |
 | `infra/processor.tf` | Disabled processor shell, not a published application package |
 
-The hosted system additionally validates provider delivery, storage/container allowlists, ETags/version IDs, file metadata and SQL processing. Those cloud adapters are not replaced by a synthetic JSON event. The public demo never scans a real file for malware.
+The hosted system additionally validates provider delivery, storage/container allowlists, ETags/version IDs, file metadata and SQL processing. Those cloud adapters are not replaced by a test-only JSON event. The public demo never scans a real file for malware.
 
 Badge portrait generation is a separate project. This repository contains no image-generation or text-classification adapter.

@@ -1,6 +1,6 @@
 # Azure Malware Scanning & File Quarantine
 
-**Keep uploaded files unavailable until the exact version passes its malware check.**
+**Keep uploaded files unavailable until the correct file version passes its malware check.**
 
 [The problem](#the-business-problem) · [The solution](#the-solution) · [What was built](#what-was-built) · [Proof it works](#proof-it-works) · [Commands](docs/COMMANDS.md)
 
@@ -8,24 +8,20 @@
 
 ## The Business Problem
 
-Applicants and employees upload documents into an operational platform. Those files must not become downloadable just because storage accepted them. A malware verdict can arrive late, arrive twice, or refer to bytes that have since been replaced.
-
-1. **Unverified files get distributed.** Upload acceptance is not proof that scanning completed.
-2. **A stale clean result unlocks a replacement.** A verdict must belong to the exact stored version.
-3. **Processing failures look like clean files.** Unknown, failed and malicious results must remain unavailable.
+Applicants and employees upload documents into the platform. An upload being accepted does not mean the file is safe. A scan result may arrive late, arrive more than once, or describe an older file that has already been replaced.
 
 ## The Solution
 
-Use Microsoft Defender for Storage for malware detection, then deliver its results through Event Grid and a queue to a dedicated processor. The application stores a version-bound result and only serves an authorized file when its current bytes have a matching clean proof.
+Use Microsoft Defender for Storage to scan uploads. Send the results through Event Grid and a queue to a dedicated processor. Match the result to the exact file version, then check the user’s permission before allowing a preview or download.
 
-**Business goal:** Reduce the risk of distributing malicious or unverified uploads while giving staff clear file-check status and a recoverable processing path.
+**Business outcome:** Reduce the risk of sharing unsafe or unchecked files while giving staff a clear scan status and a way to recover failed processing.
 
 ### Actual implementation
 
 This case study comes from the workforce platform I built and operated. It includes selected implementation source and executable tests, related Terraform and operational lessons. The public examples omit employee records, credentials, cloud IDs and private source documents.
 
 - Integrated Defender for Storage scan results with Event Grid, queues and a dedicated Azure Functions processor.
-- Bound clean-file proofs to the exact uploaded file and authorized employee/record before previews or downloads.
+- Bound saved clean-scan results for the exact files to the exact uploaded file and authorized employee/record before previews or downloads.
 - Added visible upload/file-check status and documented recovery when the processor is stopped or events fail.
 
 The included local preview is a reproducible example. It does not replace actual nonproduction portal acceptance. [The evidence guide](docs/VALIDATION.md) distinguishes source tests, local output and cloud observations.
@@ -148,7 +144,7 @@ Read [strengths, weaknesses and tradeoffs](docs/SCALING.md) for the operating de
 - Microsoft Defender for Storage
 - Azure Functions, Event Grid and queues
 - Malware-result handling and file quarantine
-- Version binding, idempotency and protected downloads
+- Version binding, protection against repeating the same action and protected downloads
 - Terraform, failure recovery and operational visibility
 
 ## Project Guides

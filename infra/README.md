@@ -44,7 +44,7 @@ Mock-test cleanup is entirely local. A real destroy is a separate reviewed actio
 
 ## Strengths and tradeoffs
 
-The foundation makes the event path reviewable without activating workers or paid scans. It intentionally stops short of an application deployment. Separate host storage and authenticated event handling add resources and operational work but reduce the blast radius.
+The foundation makes the event path reviewable without activating workers or paid scans. It intentionally stops short of an application deployment. Separate host storage and authenticated event handling add resources and operational work but reduce the range of systems a failure could affect.
 
 ## Resource inventory
 

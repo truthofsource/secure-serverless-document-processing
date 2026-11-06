@@ -16,7 +16,7 @@ npm run test:source
 
 ## 3. Bind the result to the exact file
 
-The hosted system must validate authenticated delivery, storage/container boundary and immutable file metadata. The local adapter models the version-bound state and event journal. An old clean result cannot unlock a replacement file.
+The hosted system must validate authenticated delivery, storage/container boundary and immutable file metadata. The local adapter models the tied to one exact version state and event journal. An old clean result cannot unlock a replacement file.
 
 ```bash
 python -B -m unittest discover -s tests -p test_domain.py -k stale_event -v
