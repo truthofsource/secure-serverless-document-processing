@@ -26,13 +26,27 @@ This case study comes from the workforce platform I built and operated. It inclu
 
 The included local preview is a reproducible example. It does not replace actual nonproduction portal acceptance. [The evidence guide](docs/VALIDATION.md) distinguishes source tests, local output and cloud observations.
 
+## Tools Used and What They Do
+
+| Tool or service | What it does | Where it fits |
+| --- | --- | --- |
+| Microsoft Defender for Storage | Produce the malware-scanning result for an uploaded file. | Actual detector; the processor does not invent its own clean verdict. |
+| Event Grid | Deliver the scan-result event to the configured destination. | Actual event-routing service; matched delivery is not completed processing. |
+| Azure Storage Queues | Hold scan-result work until the processor consumes it. | Actual queue boundary, including failed/poison work. |
+| Azure Functions, Node.js and TypeScript | Validate the event and save the allowed document transition. | Actual selected processor rules; local tests use fictional events. |
+| Azure Blob Storage and Azure SQL | Keep the file bytes and the document/scan relationship. | Actual storage boundaries; exact byte/version identity matters. |
+| Terraform and Azure CLI | Describe service wiring and support scoped operating checks. | Reference/operating tools; no infrastructure is created by the demo. |
+| Python and the Node test runner | Run the local model and extracted policy tests. | Local validation only; distinct from a fresh Defender scan. |
+
+GitHub Actions runs manual reference checks. Trivy and the other release scanners are separate controls from malware scanning of employee uploads.
+
 ## Step by Step
 
 A short walkthrough of the process, with technical instructions and evidence limits in the sections below.
 
-1. **Hold the new upload privately** — Save the uploaded file with a pending check status. Do not allow viewing merely because the upload completed.
+1. **Hold the new upload privately (Blob Storage)** — Save the uploaded file with a pending check status. Do not allow viewing merely because the upload completed.
 
-2. **Receive the malware result** — Microsoft Defender for Storage produces a scan result for the file. Event Grid and a queue carry that result to the dedicated processor.
+2. **Receive the malware result (Defender and Event Grid)** — Microsoft Defender for Storage produces a scan result for the file. Event Grid and a queue carry that result to the dedicated processor.
 
 3. **Match the exact file** — The processor checks the result against the expected file and its change details. A result for an older or different file must not unlock the current upload.
 
