@@ -159,6 +159,10 @@ Read [strengths, weaknesses and tradeoffs](docs/SCALING.md) for the operating de
 - Version binding, protection against repeating the same action and protected downloads
 - Terraform, failure recovery and operational visibility
 
+## Troubleshooting Lessons
+
+A clean provider result still left a document pending. Investigation separated a host-storage conflict from a SQL file-size representation defect before recovering the original event. [Read the incident, evidence and verification](docs/LESSONS-LEARNED.md).
+
 ## Project Guides
 
 | Guide | Purpose |
