@@ -2,7 +2,7 @@
 
 **Keep uploaded files unavailable until the correct file version passes its malware check.**
 
-[The problem](#the-business-problem) · [The solution](#the-solution) · [What was built](#what-was-built) · [Proof it works](#proof-it-works) · [Commands](docs/COMMANDS.md)
+[The problem](#the-business-problem) · [The solution](#the-solution) · [What was built](#what-was-built) · [Proof it works](#proof-it-works) · [Commands](docs/COMMANDS.md) · [Step by step](#step-by-step)
 
 ![Working local demonstration](docs/images/01-overview.png)
 
@@ -25,6 +25,18 @@ This case study comes from the workforce platform I built and operated. It inclu
 - Added visible upload/file-check status and documented recovery when the processor is stopped or events fail.
 
 The included local preview is a reproducible example. It does not replace actual nonproduction portal acceptance. [The evidence guide](docs/VALIDATION.md) distinguishes source tests, local output and cloud observations.
+
+## Step by Step
+
+A short walkthrough of the process, with technical instructions and evidence limits in the sections below.
+
+1. **Hold the new upload privately** — Save the uploaded file with a pending check status. Do not allow viewing merely because the upload completed.
+
+2. **Receive the malware result** — Microsoft Defender for Storage produces a scan result for the file. Event Grid and a queue carry that result to the dedicated processor.
+
+3. **Match the exact file** — The processor checks the result against the expected file and its change details. A result for an older or different file must not unlock the current upload.
+
+4. **Allow access only when ready** — A matching clean result supports availability, but the user must still have permission to the record. Unsafe, failed or uncertain results leave the file unavailable.
 
 ## Architecture
 
