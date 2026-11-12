@@ -8,7 +8,11 @@
 
 ## The Business Problem
 
-Applicants and employees upload documents into the platform. An upload being accepted does not mean the file is safe. A scan result may arrive late, arrive more than once, or describe an older file that has already been replaced.
+Applicants and employees submit identity documents, employment forms and other files that HR needs to open during onboarding and administration. Accepting the upload makes the document available to the application, but it gives staff no reliable assurance that opening it is safe. Sharing an unchecked attachment can expose both the reviewer and the organization's systems.
+
+The file check happens separately from the upload. Its result can arrive late, appear twice or refer to an older version that the user has replaced. If the application accepts the wrong result, it can release unchecked bytes; if processing stalls without a useful status, staff face blocked work and uncertain next steps.
+
+The business need was to keep each file unavailable until its own trusted malware result is known, show meaningful progress and support recovery without manually declaring a file safe.
 
 ## The Solution
 
