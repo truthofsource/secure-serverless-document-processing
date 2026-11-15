@@ -1,108 +1,150 @@
-# Build your own: Azure Malware Scanning & File Quarantine
+# Build your own from scratch: Secure Serverless Document Processing
 
-This is a step-by-step build guide for an independent learning copy. Follow the numbered steps in order and record your own results. The included local implementation is not a complete deployment of the private business platform; cloud extensions are separate and must use your own authorized resources.
+Your own private upload quarantine, Defender scan-result delivery and exact-object release decision.
 
-## What you will create
+Start with a new folder, your own files and your own accounts. The numbered steps below describe the build; no portfolio repository checkout is required. The existing implementation/evidence elsewhere in this repository is a separate reference, not a claim that your new build has already passed.
 
-A clean/blocked/pending file decision, not a new Defender malware scan.
+## Prerequisites
 
-## Prerequisites and working locations
+Azure Storage/Defender for Storage/Event Grid permissions, a chosen scan-volume budget, a private event destination and a serverless consumer identity. Scanning is billed and configuration limits must be checked for the selected account/region.
 
-| Location | What you need |
-| --- | --- |
-| Your workstation | Git and the runtime versions documented in [the command guide](COMMANDS.md); use its package/lockfile instructions. |
-| Bash, Linux or WSL terminal | The commands below use Bash syntax. Prepare Python 3.12 and the compatible Node.js version documented by the project; use the project's pinned dependency files. |
-| PowerShell alternative | Use the PowerShell forms in the command guide, or run this Bash recipe in WSL; do not paste Bash loops into PowerShell. |
-| Azure or external service | Not needed for default local tests. Any cloud extension requires your own account, target, permissions, budget and acceptance plan. |
+Use Bash on Linux/macOS/WSL for Bash blocks and PowerShell for PowerShell blocks. Select the tool versions supported by the official sources below, record the versions you actually install and retain generated dependency locks. Cloud resources, scanner downloads, logs and external AI calls can create costs; review the stated scope before enabling them.
 
-Read [the existing validation scope](VALIDATION.md) before running anything. A recorded historical test result is not evidence that your new copy has passed.
+## Create your project folder
 
-## Step 1: Create your own workspace
-
-**Where:** your workstation, in a new project folder.
-
-1. Clone the public source below into a new directory; keep the source attribution and included license terms. This creates your local learning copy, not cloud resources.
-2. Record the selected commit and tool versions before editing. If you later publish a fork, review any origin, hash or target bindings rather than disabling guards to make the fork pass.
+Choose a new folder name. These first commands create a blank project; an optional `git init` gives it its own history. Create parent directories in your editor when a later step introduces a nested file.
 
 ```bash
-git clone https://github.com/truthofsource/secure-serverless-document-processing.git
-cd secure-serverless-document-processing
-git rev-parse HEAD
-git rev-parse --show-toplevel
-git status --short
+mkdir my-secure-serverless-document-processing
+cd my-secure-serverless-document-processing
+git init
 ```
 
-**Expected result:** the project files are present and you can identify the starting source. Continue from this repository root unless a command explicitly changes directory.
+Create `.gitignore` before saving credentials or build outputs:
 
-## Step 2: Prepare dependencies and build the local baseline
+```gitignore
+.venv/
+node_modules/
+.env
+.env.*
+local.settings.json
+credentials.json
+token.json
+*.pem
+*.key
+*.tfstate*
+*.tfplan
+.terraform/
+private*/
+captures/
+backups/
+batch.json
+reports/
+out/
+app-config.local.yaml
+```
 
-**Where:** the same workstation terminal.
+The source/file snippets are a starting implementation you type or paste into the named files. Replace `YOUR_*`, names, regions and addresses only with values from your own lab; do not place real client/employee records in a test project. Keep your terminal in this project root unless a step explicitly changes directory.
 
-1. Follow the runtime instructions and install only the dependencies selected by this project's files. Terraform provider downloads, optional browser downloads and scanner databases are separate prerequisites where the detailed guide identifies them.
-2. Run these source-derived baseline commands one at a time and stop on an unexpected failure. Read any skipped integration cases; a skip is not a successful live check.
+Before a first commit, set your own repository-local author with `git config user.name "YOUR_NAME"` and `git config user.email "YOUR_PUBLIC_COMMIT_EMAIL"`. Review `git status --short` and the staged diff before publishing; ignored local files are not a substitute for reviewing what you upload.
+
+## Step 1 — Create the upload boundary
+
+**Where:** Azure Portal → Storage account → Containers.
+
+Create a private quarantine container and keep incoming files unavailable to ordinary download users. Define object owner, size/type limits, upload ID and version/ETag fields before connecting a scanner.
+
+**Check before continuing:** A new upload is Pending and has an exact object identity.
+
+## Step 2 — Enable malware scanning deliberately
+
+**Where:** Storage account → Microsoft Defender for Cloud / Defender for Storage settings.
+
+Enable the supported on-upload malware-scanning feature and set its monthly volume/cost cap. Review account/region support and how unavailable, excluded or oversized files are reported instead of assuming every file will be scanned.
+
+**Check before continuing:** The saved scanning configuration and cap are visible.
+
+## Step 3 — Create the result delivery path
+
+**Where:** Defender scanning Event Grid configuration and your queue/consumer.
+
+Create the supported custom topic/result subscription and a private queue or function endpoint. Configure the actual sender/consumer identities and dead-letter behavior; verify that the scanner can publish and the worker can read only its destination. Select the Event Grid event schema for the example consumer below; a CloudEvents envelope uses different top-level fields and needs a corresponding adapter.
+
+**Check before continuing:** A harmless test upload yields an actual scan-result event at the intended destination.
+
+## Step 4 — Implement the release predicate
+
+**Where:** Your consumer module.
+
+Create release_rule.py below as the core decision and call it only after authenticating delivery and loading the current stored upload record. It does not make an event trustworthy or implement a storage move by itself.
+
+Create **`release_rule.py`** with the following contents:
+
+```python
+def can_release(current, event):
+    data = event.get('data', {})
+    return (event.get('eventType') == 'Microsoft.Security.MalwareScanningResult'
+            and bool(current.get('blob_uri')) and bool(current.get('etag'))
+            and data.get('blobUri') == current['blob_uri']
+            and data.get('eTag') == current['etag']
+            and data.get('scanResultType') == 'No threats found')
+
+if __name__ == '__main__':
+    row = {'blob_uri': 'https://example.invalid/q/test.txt', 'etag': 'version-2'}
+    event = {'eventType': 'Microsoft.Security.MalwareScanningResult', 'data': {
+        'blobUri': row['blob_uri'], 'eTag': 'version-1', 'scanResultType': 'No threats found'}}
+    assert not can_release(row, event)  # an older clean result must not unlock a new upload
+    event['data']['eTag'] = 'version-2'
+    assert can_release(row, event)
+    event['data']['scanResultType'] = 'Error'
+    assert not can_release(row, event)
+```
+
+**Check before continuing:** Only a clean result for the same URI/ETag can pass this narrow predicate.
+
+## Step 5 — Prove clean, blocked and stale outcomes
+
+**Where:** Your approved lab consumer and event history.
+
+Run the local predicate test, then use the official harmless/EICAR testing procedure only in your authorized isolated lab. Verify Pending/Error/Not Scanned remain unavailable, an old result cannot unlock a new version, duplicate delivery is idempotent and a current clean result changes only its intended record.
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-npm run test:source
-.venv/bin/python -B -m unittest discover -s tests -v
-.venv/bin/python -B -m lab demo
+python3 release_rule.py
 ```
 
-**Expected result:** the selected tests finish without unexpected failures, and a demonstration command, where provided, produces fictional local decisions. These commands reproduce the included lab scope; they do not commission the live platform.
+**Check before continuing:** Your evidence covers actual scanning/delivery and application release separately.
 
-## Step 3: Make one project-specific change
+## Step 6 — Verify download authorization and close out
 
-**Where:** your editor, in your own local copy.
+**Where:** Your own application/API and Azure Portal.
 
-1. Start with [`lab/domain.py`](../lab/domain.py) and the matching test or configuration instructions. Add a result for an older file version and confirm it cannot unlock the current upload.
-2. Save your new case separately from the original acceptance records, then rerun the affected tests and the baseline. Do not edit recorded scanner results, screenshots or validation counts to manufacture a successful outcome.
+Test an authorized owner and a different user against the saved current file, checking ownership and current clean status again at download. Retain private failure/dead-letter evidence, disable only the lab intake and remove resources under the chosen retention policy.
 
-**Expected result:** you can explain what you changed, why the result changed and which negative case still fails safely. An unexpected failure means investigate the implementation or setup, not remove the failing check.
+**Check before continuing:** A scanner verdict alone never grants another person access to a document.
 
-## Step 4: Verify behavior and capture your own evidence
+## Verification and your own screenshots
 
-**Where:** the test output, local viewer where supplied, and your private evidence folder.
+| Evidence | What to record | Your result |
+| --- | --- | --- |
+| New build | Your own files/resource settings and tool versions | Not yet recorded |
+| Working path | The actual successful request, configuration or recovery result | Not yet recorded |
+| Failure boundary | A meaningful denied, malformed, stale or failed case | Not yet recorded |
+| Recovery / cleanup | What you restored or removed and what remains billed | Not yet recorded |
 
-1. If the project supplies a viewer, use its startup command in [the command guide](COMMANDS.md); keep long-running preview servers in a separate terminal. Follow its exact loopback address and stop it with Ctrl+C when finished; for a command-line-only example, inspect its terminal output and generated files instead.
-2. Compare your own output with [the proof and limits](../README.md#proof-it-works), then record source version, command, expected result, observed result and unresolved work. Capture screenshots of your own fictional output rather than presenting the existing screenshots as your execution.
+Capture your own architecture/configuration, one working result and one failure/recovery result. Keep tokens, credentials, personal records and private identifiers out of public screenshots. Existing portfolio images are references, not evidence that you performed these steps.
 
-**Expected result:** A clean/blocked/pending file decision, not a new Defender malware scan. Your evidence must say whether it covers local logic, a real tool run, a hosted service or a human observation.
+## Troubleshooting order
 
-### Start the local preview
+1. Confirm the named file, working directory and selected tool/interpreter.
+2. Check the exact input and resource/account selected for the failing step.
+3. Separate identity permission, network/DNS reachability and application validation.
+4. Keep the actual error and reconcile an unknown write outcome before repeating it; do not widen access or repeat paid operations blindly.
 
-Open a second terminal in the same repository root printed by `git rev-parse --show-toplevel`. Run the command below from that root, after the baseline has passed; it stays running while you use the preview.
+The numbered steps describe a build procedure. Local syntax checks, an accepted API request, a completed hosted operation and a human verification are different evidence levels; fill in the verification table with what you actually observed.
 
-```bash
-.venv/bin/python -B -m lab serve --port 8011
-```
+## Official implementation references
 
-Open [http://127.0.0.1:8011](http://127.0.0.1:8011). Use the exact hostname shown here; a localhost address and a 127.0.0.1 address are not interchangeable for every project's host checks.
+- [learn.microsoft.com — defender-for-storage-configure-malware-scan](https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-storage-configure-malware-scan)
+- [learn.microsoft.com — defender-for-storage-test](https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-storage-test)
 
-The command uses the same Python environment as the baseline where Python is required. This guide uses an explicit virtual-environment executable rather than activating it; when following other project examples that say `python`, use that same executable if the project has a `.venv`. In WSL, keep the clone and its virtual environment in the same Linux environment; do not reuse a Windows `.venv`.
-
-Keep one preview per listening port. Stop your own earlier preview with Ctrl+C before starting another one on that port, or use only a port override documented by the project. If you stop the preview, rerun only its startup command; you do not need to rebuild or redeploy cloud services.
-
-## Step 5: Plan an independent cloud extension, if needed
-
-**Where:** your own architecture/configuration files first; a separately authorized lab subscription only later.
-
-1. Read the implementation and infrastructure references linked below. Substitute your own names, identities, address ranges and service settings in an isolated environment; a public reference may contain only selected components and is not authority to apply someone else's production state.
-2. List the missing integrations and acceptance checks before deployment: runtime hosting, permissions, network/DNS paths, secrets, source data, notification or provider access as applicable. Keep disabled examples disabled until their specific dependencies, costs and cleanup are understood.
-
-**Expected result:** a scoped extension plan with owners and explicit acceptance criteria, not a claim that the full service is deployed. No cloud `apply`, scanner targeting, paid operation or provider sign-in is implied by the local recipe.
-
-- [Architecture](ARCHITECTURE.md)
-- [Operations](OPERATIONS.md)
-- [Validation](VALIDATION.md)
-- [Source Map](SOURCE-MAP.md)
-- [Lessons Learned](LESSONS-LEARNED.md)
-
-## Step 6: Troubleshoot, close out and explain what you built
-
-**Where:** your project folder and the operating guide for any environment you actually created.
-
-1. Check the failing stage in order: working directory and runtime, dependencies, test input, configuration, then any separately enabled service. Preserve the error and consult the existing troubleshooting lessons before widening permissions or changing the target.
-2. Stop only the viewers/containers you started, retain your useful evidence and remove only resources belonging to your own reviewed lab. A local-only run needs no cloud deletion; if you created cloud resources, verify residual storage/address/monitoring charges rather than assuming compute stop removes all cost.
-
-**Finish checklist:** explain the business problem, show your own change and verification, describe one failure/recovery case, identify limitations and name the next owner action. Keep credentials and business records out of public commits and screenshots.
+The walkthrough layout follows the prerequisites → creation/configuration → test → verification → troubleshooting → cleanup pattern of the [Splunk project reference](https://github.com/davidharris6/splunk-siem-log-analysis). Its Splunk-specific settings are not copied into unrelated projects.
