@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1682" viewBox="0 0 1200 1682" role="img" aria-labelledby="title desc">
+<title id="title">Malware scanning and quarantine — illustrated architecture</title>
+<desc id="desc">Actual Defender event, processor and file-release boundaries. Only the clean branch reaches downloads. Quarantine means private bytes and denied reads; it does not imply automatic deletion or movement.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#586574" /></marker></defs>
+<rect width="1200" height="1682" fill="white" />
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="54" y="36" font-size="12" font-weight="700" letter-spacing="1.8" fill="#617084">PROJECT ARCHITECTURE · ILLUSTRATED OVERVIEW</text>
+<text x="54" y="79" font-size="30" font-weight="700" fill="#172d46">Malware scanning and quarantine</text>
+<text x="54" y="110" font-size="16" fill="#526276">Actual Defender event, processor and file-release boundaries</text>
+<path d="M600.0 336 V370.0 H600.0 V402" fill="none" stroke="#586574" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#arrow)" />
+<path d="M600.0 574 V608.0 H600.0 V640" fill="none" stroke="#586574" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#arrow)" />
+<path d="M600.0 812 V846.0 H600.0 V878" fill="none" stroke="#586574" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#arrow)" />
+<path d="M600.0 1050 V1084.0 H228.66666666666666 V1116" fill="none" stroke="#586574" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#arrow)" />
+<path d="M600.0 1050 V1084.0 H600.0 V1116" fill="none" stroke="#586574" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#arrow)" />
+<path d="M600.0 1050 V1084.0 H971.3333333333333 V1116" fill="none" stroke="#586574" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#arrow)" />
+<path d="M228.66666666666666 1288 V1322.0 H600.0 V1354" fill="none" stroke="#586574" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#arrow)" />
+<g data-node="n0_0"><rect x="425.0" y="166" width="350" height="170" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" />
+<svg width="36" height="36" viewBox="0 0 40 40" x="582.0" y="178" data-purpose-icon="n0_0"><rect x="1" y="1" width="38" height="38" rx="8" fill="white" stroke="#315f8a" stroke-opacity="0.3" /><g transform="translate(8 8)" fill="none" stroke="#315f8a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16v6h18v-6M12 17V2m-5 5 5-5 5 5" /></g></svg>
+<text x="600.0" y="238" text-anchor="middle" font-size="16" font-weight="700" fill="#20384f">Authorized upload</text>
+<text x="600.0" y="266" text-anchor="middle" font-size="14" fill="#40556b">Holds the uploaded file privately until a</text>
+<text x="600.0" y="284" text-anchor="middle" font-size="14" fill="#40556b">scan result arrives.</text>
+</g>
+<g data-node="n1_0"><rect x="425.0" y="404" width="350" height="170" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" />
+<svg width="36" height="36" viewBox="0 0 40 40" x="582.0" y="416" data-purpose-icon="n1_0"><rect x="1" y="1" width="38" height="38" rx="8" fill="white" stroke="#315f8a" stroke-opacity="0.3" /><g transform="translate(8 8)" fill="none" stroke="#315f8a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6l9-4Z" /></g></svg>
+<text x="600.0" y="476" text-anchor="middle" font-size="16" font-weight="700" fill="#20384f">Defender for Storage</text>
+<text x="600.0" y="504" text-anchor="middle" font-size="14" fill="#40556b">Checks the uploaded file for malware.</text>
+</g>
+<g data-node="n2_0"><rect x="425.0" y="642" width="350" height="170" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" />
+<svg width="36" height="36" viewBox="0 0 40 40" x="582.0" y="654" data-purpose-icon="n2_0"><rect x="1" y="1" width="38" height="38" rx="8" fill="white" stroke="#315f8a" stroke-opacity="0.3" /><g transform="translate(8 8)" fill="none" stroke="#315f8a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="5" r="2" /><circle cx="20" cy="5" r="2" /><circle cx="12" cy="20" r="2" /><path d="M4 7v5h16V7m-8 5v6" /></g></svg>
+<text x="600.0" y="714" text-anchor="middle" font-size="16" font-weight="700" fill="#20384f">Event Grid → result queue</text>
+<text x="600.0" y="742" text-anchor="middle" font-size="14" fill="#40556b">Carries the scan result to the waiting</text>
+<text x="600.0" y="760" text-anchor="middle" font-size="14" fill="#40556b">processing queue.</text>
+</g>
+<g data-node="n3_0"><rect x="425.0" y="880" width="350" height="170" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" />
+<svg width="36" height="36" viewBox="0 0 40 40" x="582.0" y="892" data-purpose-icon="n3_0"><rect x="1" y="1" width="38" height="38" rx="8" fill="white" stroke="#315f8a" stroke-opacity="0.3" /><g transform="translate(8 8)" fill="none" stroke="#315f8a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 2 1 3h4l1-3 3 2-1 3 2 3 3-1v5l-3 1-2 3 1 3-3 2-1-3h-4l-1 3-3-2 1-3-2-3-3-1V9l3 1 2-3-1-3 3-2Z" /><path d="m10 8 6 4-6 4V8Z" /></g></svg>
+<text x="600.0" y="952" text-anchor="middle" font-size="16" font-weight="700" fill="#20384f">Dedicated Functions processor</text>
+<text x="600.0" y="980" text-anchor="middle" font-size="14" fill="#40556b">Checks that the result matches the exact</text>
+<text x="600.0" y="998" text-anchor="middle" font-size="14" fill="#40556b">uploaded file.</text>
+</g>
+<g data-node="n4_0"><rect x="60.0" y="1118" width="337.3333333333333" height="170" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5" />
+<svg width="36" height="36" viewBox="0 0 40 40" x="210.66666666666666" y="1130" data-purpose-icon="n4_0"><rect x="1" y="1" width="38" height="38" rx="8" fill="white" stroke="#527a50" stroke-opacity="0.3" /><g transform="translate(8 8)" fill="none" stroke="#527a50" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6l9-4Z" /><path d="m7 12 3 3 7-7" /></g></svg>
+<text x="228.66666666666666" y="1190" text-anchor="middle" font-size="16" font-weight="700" fill="#20384f">Matching clean verdict</text>
+<text x="228.66666666666666" y="1218" text-anchor="middle" font-size="14" fill="#40556b">Records that this exact file passed the</text>
+<text x="228.66666666666666" y="1236" text-anchor="middle" font-size="14" fill="#40556b">malware check.</text>
+</g>
+<g data-node="n4_1"><rect x="431.3333333333333" y="1118" width="337.3333333333333" height="170" rx="7" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5" />
+<svg width="36" height="36" viewBox="0 0 40 40" x="582.0" y="1130" data-purpose-icon="n4_1"><rect x="1" y="1" width="38" height="38" rx="8" fill="white" stroke="#996e23" stroke-opacity="0.3" /><g transform="translate(8 8)" fill="none" stroke="#996e23" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M5 5l14 14" /></g></svg>
+<text x="600.0" y="1190" text-anchor="middle" font-size="16" font-weight="700" fill="#20384f">Malicious / unknown</text>
+<text x="600.0" y="1218" text-anchor="middle" font-size="14" fill="#40556b">Keeps the file unavailable when it is</text>
+<text x="600.0" y="1236" text-anchor="middle" font-size="14" fill="#40556b">unsafe or uncertain.</text>
+</g>
+<g data-node="n4_2"><rect x="802.6666666666666" y="1118" width="337.3333333333333" height="170" rx="7" fill="#f8cecc" stroke="#b85450" stroke-width="1.5" />
+<svg width="36" height="36" viewBox="0 0 40 40" x="953.3333333333333" y="1130" data-purpose-icon="n4_2"><rect x="1" y="1" width="38" height="38" rx="8" fill="white" stroke="#9c4545" stroke-opacity="0.3" /><g transform="translate(8 8)" fill="none" stroke="#9c4545" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 11 20H1L12 2Z" /><path d="M12 8v6m0 4h.1" /></g></svg>
+<text x="971.3333333333333" y="1190" text-anchor="middle" font-size="16" font-weight="700" fill="#20384f">Processing failure</text>
+<text x="971.3333333333333" y="1218" text-anchor="middle" font-size="14" fill="#40556b">Keeps failed processing work available for</text>
+<text x="971.3333333333333" y="1236" text-anchor="middle" font-size="14" fill="#40556b">investigation.</text>
+</g>
+<g data-node="n5_0"><rect x="425.0" y="1356" width="350" height="170" rx="7" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5" />
+<svg width="36" height="36" viewBox="0 0 40 40" x="582.0" y="1368" data-purpose-icon="n5_0"><rect x="1" y="1" width="38" height="38" rx="8" fill="white" stroke="#745386" stroke-opacity="0.3" /><g transform="translate(8 8)" fill="none" stroke="#745386" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2h10l5 5v15H5V2Zm10 0v6h5M8 12h9m-9 4h9m-9 4h5" /></g></svg>
+<text x="600.0" y="1428" text-anchor="middle" font-size="16" font-weight="700" fill="#20384f">Protected preview / download</text>
+<text x="600.0" y="1456" text-anchor="middle" font-size="14" fill="#40556b">Allows opening only after safety and access</text>
+<text x="600.0" y="1474" text-anchor="middle" font-size="14" fill="#40556b">checks pass.</text>
+</g>
+<line x1="54" y1="1554" x2="1146" y2="1554" stroke="#dce2e9" />
+<text x="54" y="1575" font-size="13" fill="#526276">Only the clean branch reaches downloads. Quarantine means private bytes and denied reads; it does not imply automatic deletion or movement.</text>
+<text x="54" y="1656" font-size="11.5" fill="#687789">truthofsource/secure-serverless-document-processing · Purpose icons, not vendor logos or completion status</text></g></svg>

@@ -1,8 +1,10 @@
 # Actual nonproduction evidence to capture later
 
+Placeholder screenshots were removed on November 15, 2026. Written test results below retain their original dates and scope; historical screenshot references describe earlier captures. Proper Azure and application screenshots are deferred. The illustrated architecture is a source-based explanation, not a live-service screenshot.
+
 ## Current evidence
 
-The included images show executed source/reference checks and fictional local output. They are not Azure Portal screenshots or screenshots of the full hosted platform.
+Source/reference test records remain available in the validation guide. The former local demonstration captures have been removed.
 
 ## Proposed portal/application captures
 

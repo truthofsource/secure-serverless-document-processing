@@ -1,10 +1,12 @@
 # Azure Malware Scanning & File Quarantine
 
+[![Malware scanning and quarantine — illustrated overview](docs/diagrams/architecture.png)](docs/diagrams/architecture.svg)
+
+[View SVG](docs/diagrams/architecture.svg) · [Download PNG](docs/diagrams/architecture.png) · [Edit in draw.io](docs/diagrams/architecture.drawio)
+
 **Keep uploaded files unavailable until the correct file version passes its malware check.**
 
 [The problem](#the-business-problem) · [The solution](#the-solution) · [What was built](#what-was-built) · [Proof it works](#proof-it-works) · [Commands](docs/COMMANDS.md) · [Step by step](#step-by-step)
-
-![Working local demonstration](docs/images/01-overview.png)
 
 ## The Business Problem
 
@@ -190,7 +192,7 @@ Test an authorized owner and a different user against the saved current file, ch
 | Failure boundary | A meaningful denied, malformed, stale or failed case | Not yet recorded |
 | Recovery / cleanup | What you restored or removed and what remains billed | Not yet recorded |
 
-Capture your own architecture/configuration, one working result and one failure/recovery result. Keep tokens, credentials, personal records and private identifiers out of public screenshots. Existing portfolio images are references, not evidence that you performed these steps.
+Capture your own architecture/configuration, one working result and one failure/recovery result. Keep tokens, credentials, personal records and private identifiers out of public screenshots. The architecture diagram explains the design; record your own results rather than treating it as execution evidence.
 
 ### Troubleshooting order
 
@@ -225,21 +227,7 @@ A short walkthrough of the process, with technical instructions and evidence lim
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  Upload[Authorized upload] --> Blob[Private blob: pending]
-  Blob --> Defender[Microsoft Defender for Storage]
-  Defender --> Event[Event Grid scan result]
-  Event --> Queue[Result queue]
-  Queue --> Worker[Dedicated result processor]
-  Worker --> State{Verdict plus exact version}
-  State -->|Clean and matching| Proof[Saved clean proof]
-  State -->|Malicious| Blocked[Blocked file]
-  State -->|Error or unknown| Error[Unavailable file]
-  Worker -. processing failure .-> Poison[Poison / failed work]
-  Proof --> Auth[Employee and record authorization]
-  Auth --> View[Protected preview or download]
-```
+[View the illustrated project overview](docs/diagrams/architecture.svg).
 
 ## What Was Built
 
@@ -289,8 +277,6 @@ python -B -m unittest discover -s tests -v
 ### 4. Visible output
 
 The workbench shows the executed checks and fictional records. Desktop/mobile views, rerun behavior and access restrictions were checked. See [dated validation](docs/VALIDATION.md) for scope and counts.
-
-![Executed checks](docs/images/02-validation.png)
 
 ## Security Practices
 

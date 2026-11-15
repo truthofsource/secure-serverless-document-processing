@@ -45,7 +45,6 @@ python -B -m unittest discover -s tests -p test_concurrency.py -v
 
 `npm run test:source` runs the extracted provider mapping; Python exercises the public event/version journal. `OK` on a malicious-file test means its download was denied, not that the file was made clean. No live malware sample or Defender scan is performed.
 
-
 ## Terraform without cloud mutation
 
 ```bash

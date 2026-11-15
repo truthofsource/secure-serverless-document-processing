@@ -12,21 +12,20 @@ Applicants and employees upload documents into an operational platform. Those fi
 
 ## Processing path
 
-```mermaid
-flowchart LR
-  Upload[Authorized upload] --> Blob[Private blob: pending]
-  Blob --> Defender[Microsoft Defender for Storage]
-  Defender --> Event[Event Grid scan result]
-  Event --> Queue[Result queue]
-  Queue --> Worker[Dedicated result processor]
-  Worker --> State{Verdict plus exact version}
-  State -->|Clean and matching| Proof[Saved clean proof]
-  State -->|Malicious| Blocked[Blocked file]
-  State -->|Error or unknown| Error[Unavailable file]
-  Worker -. processing failure .-> Poison[Poison / failed work]
-  Proof --> Auth[Employee and record authorization]
-  Auth --> View[Protected preview or download]
-```
+1. **Authorized upload** → **Private blob: pending**.
+2. **Private blob: pending** → **Microsoft Defender for Storage**.
+3. **Microsoft Defender for Storage** → **Event Grid scan result**.
+4. **Event Grid scan result** → **Result queue**.
+5. **Result queue** → **Dedicated result processor**.
+6. **Dedicated result processor** → **Verdict plus exact version**.
+7. **Verdict plus exact version** → **Saved clean proof (Clean and matching)**.
+8. **Verdict plus exact version** → **Blocked file (Malicious)**.
+9. **Verdict plus exact version** → **Unavailable file (Error or unknown)**.
+10. Dedicated result processor has a conditional/reference connection to Poison / failed work (processing failure).
+11. **Saved clean proof** → **Employee and record authorization**.
+12. **Employee and record authorization** → **Protected preview or download**.
+
+[View the illustrated project overview](diagrams/architecture.svg).
 
 ## Implementation layers
 
