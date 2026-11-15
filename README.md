@@ -100,7 +100,7 @@ Before a first commit, set your own repository-local author with `git config use
 
 **Where:** Azure Portal → Storage account → Containers.
 
-Create a private quarantine container and keep incoming files unavailable to ordinary download users. Define object owner, size/type limits, upload ID and version/ETag fields before connecting a scanner.
+Create a private quarantine container and keep incoming files unavailable to ordinary download users. Define object owner, size/type limits, upload ID and version/ETag fields before connecting a scanner. Record whether the upload is still active; a scan result must never reactivate a retired/revoked upload.
 
 **Check before continuing:** A new upload is Pending and has an exact object identity.
 
@@ -124,31 +124,42 @@ Create the supported custom topic/result subscription and a private queue or fun
 
 **Where:** Your consumer module.
 
-Create release_rule.py below as the core decision and call it only after authenticating delivery and loading the current stored upload record. It does not make an event trustworthy or implement a storage move by itself.
+Create release_rule.py below and call it only after authenticating delivery and loading the current stored upload record. It rejects malformed event shapes and inactive records before comparing the exact object/version; it does not itself authenticate delivery or move a blob.
 
 Create **`release_rule.py`** with the following contents:
 
 ```python
 def can_release(current, event):
-    data = event.get('data', {})
+    if not isinstance(current, dict) or not isinstance(event, dict):
+        return False
+    data = event.get('data')
+    if not isinstance(data, dict) or current.get('active') is not True:
+        return False
+    for field in ('blob_uri', 'etag'):
+        value = current.get(field)
+        if not isinstance(value, str) or not value or value.strip() != value:
+            return False
     return (event.get('eventType') == 'Microsoft.Security.MalwareScanningResult'
-            and bool(current.get('blob_uri')) and bool(current.get('etag'))
             and data.get('blobUri') == current['blob_uri']
             and data.get('eTag') == current['etag']
             and data.get('scanResultType') == 'No threats found')
 
 if __name__ == '__main__':
-    row = {'blob_uri': 'https://example.invalid/q/test.txt', 'etag': 'version-2'}
+    row = {'blob_uri': 'https://example.invalid/q/test.txt', 'etag': 'version-2', 'active': True}
     event = {'eventType': 'Microsoft.Security.MalwareScanningResult', 'data': {
         'blobUri': row['blob_uri'], 'eTag': 'version-1', 'scanResultType': 'No threats found'}}
-    assert not can_release(row, event)  # an older clean result must not unlock a new upload
+    assert not can_release(row, event)
     event['data']['eTag'] = 'version-2'
     assert can_release(row, event)
+    assert not can_release({**row, 'active': False}, event)
+    assert not can_release(row, {'data': None})
     event['data']['scanResultType'] = 'Error'
     assert not can_release(row, event)
 ```
 
-**Check before continuing:** Only a clean result for the same URI/ETag can pass this narrow predicate.
+Keep the stored and delivered ETag in the same explicitly defined representation. A quote/format mismatch must be investigated in the adapter, not treated as permission to ignore version matching. Malformed/rejected messages need a bounded failure/dead-letter path in the actual consumer.
+
+**Check before continuing:** Only a clean result for the same URI/ETag of an active current upload can pass this narrow predicate.
 
 ### Step 5 — Prove clean, blocked and stale outcomes
 
