@@ -46,6 +46,19 @@ GitHub Actions runs manual reference checks. Trivy and the other release scanner
 
 ## Step by Step
 
+Build an independent version with the [reader-operated walkthrough](docs/BUILD-YOUR-OWN.md). It gives prerequisites, working locations, numbered actions, source-derived commands, expected results, verification and cleanup.
+
+For this project, your working starting point is [`lab/domain.py`](lab/domain.py). Expected scope: A clean/blocked/pending file decision, not a new Defender malware scan.
+
+1. **Create your own workspace.** Copy the project and record the source version before editing.
+2. **Prepare and run the baseline.** Use the documented runtimes and selected dependencies, then run the local checks.
+3. **Make your own change.** Edit a project-specific fixture, configuration or rule and rerun its positive and negative cases.
+4. **Verify and document your result.** Capture your own evidence and distinguish a local example from a live integration.
+5. **Extend and close out deliberately.** Plan any independent cloud work separately and clean up only what you created.
+
+<details>
+<summary>How the underlying platform process works</summary>
+
 A short walkthrough of the process, with technical instructions and evidence limits in the sections below.
 
 1. **Hold the new upload privately (Blob Storage)** — Save the uploaded file with a pending check status. Do not allow viewing merely because the upload completed.
@@ -55,6 +68,8 @@ A short walkthrough of the process, with technical instructions and evidence lim
 3. **Match the exact file** — The processor checks the result against the expected file and its change details. A result for an older or different file must not unlock the current upload.
 
 4. **Allow access only when ready** — A matching clean result supports availability, but the user must still have permission to the record. Unsafe, failed or uncertain results leave the file unavailable.
+
+</details>
 
 ## Architecture
 
